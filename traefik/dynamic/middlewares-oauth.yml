@@ -1,0 +1,8 @@
+http:
+  middlewares:
+    oauth:
+      forwardAuth:
+        address: "http://authentik-server:9000"
+        trustForwardHeader: true
+        authResponseHeaders:
+          - "X-Forwarded-User"

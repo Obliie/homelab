@@ -1,0 +1,54 @@
+version: "3.7"
+
+services:
+  ghost:
+    image: ghost:5-alpine
+    restart: unless-stopped
+    volumes:
+      - ghost_content:/var/lib/ghost/content
+    environment:
+      database__client: mysql
+      database__connection__host: ghost-db
+      database__connection__port: 3307
+      database__connection__user: ghost
+      database__connection__password: ${GHOST_DB_PASS}
+      database__connection__database: ghost
+      url: https://${DOMAIN}
+    labels:
+      - "traefik.enable=true"
+      # 1. create router
+      - "traefik.http.routers.ghost.rule=Host(`${DOMAIN}`)"
+      - "traefik.http.routers.ghost.entrypoints=websecure"
+      - "traefik.http.routers.error-pages-router.tls=true"
+      - "traefik.http.routers.ghost.tls.certresolver=cloudflare"
+      - "traefik.http.routers.ghost.middlewares=chain-no-auth@file"
+      - "traefik.http.services.ghost.loadbalancer.server.port=2368"
+    depends_on:
+      - ghost-db
+    networks:
+      - traefik-servicenet
+  ghost-db:
+    image: mysql:8.0
+    restart: unless-stopped
+    environment:
+      MYSQL_ROOT_USER: root
+      MYSQL_ROOT_PASSWORD: ${GHOST_DB_ROOT_PASS}
+      MYSQL_DATABASE: ghost
+      MYSQL_USER: ghost
+      MYSQL_PASSWORD: ${GHOST_DB_PASS}
+    volumes:
+      - ghost_database:/var/lib/mysql
+
+volumes:
+  ghost_content:
+    driver: local
+    driver_opts:
+      type: "nfs"
+      o: addr=${NFS_HOST},nolock,soft,rw
+      device: ":/docker01/ghost/content"
+  ghost_database:
+    driver: local
+    driver_opts:
+      type: "nfs"
+      o: addr=${NFS_HOST},nolock,soft,rw
+      device: ":/docker01/ghost/database"

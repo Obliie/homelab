@@ -1,0 +1,27 @@
+version: "3.7"
+
+services:
+  error-pages:
+    image: ghcr.io/tarampampam/error-pages:3
+    restart: unless-stopped
+    read_only: true
+    mem_limit: 64M
+    cap_drop:
+      - ALL
+    security_opt:
+      - no-new-privileges
+    labels:
+      - "traefik.enable=true"
+      # 1. create router
+      - "traefik.http.routers.error-pages-router.rule=HostRegexp(`.+`)"
+      - "traefik.http.routers.error-pages-router.entrypoints=websecure"
+      - "traefik.http.routers.error-pages-router.priority=10"
+      - "traefik.http.routers.error-pages-router.tls=true"
+      - "traefik.http.routers.error-pages-router.middlewares=chain-no-auth@file, error-pages"
+      # 2. create error pages middleware
+      - "traefik.http.middlewares.error-pages.errors.query=/{status}.html"
+      - "traefik.http.middlewares.error-pages.errors.status=400-599"
+      - "traefik.http.middlewares.error-pages.errors.service=error-pages-service"
+      - "traefik.http.services.error-pages-service.loadbalancer.server.port=8080"
+    networks:
+      - traefik-servicenet

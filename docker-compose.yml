@@ -1,0 +1,23 @@
+version: "3.7"
+
+secrets:
+  CF_API_EMAIL:
+    file: ./secrets/CF_API_EMAIL
+  CF_API_KEY:
+    file: ./secrets/CF_API_KEY
+  TRAEFIK_SSL_CERT:
+    file: ./secrets/traefik.crt
+  TRAEFIK_SSL_KEY:
+    file: ./secrets/traefik.key
+
+networks:
+  traefik-servicenet:
+    driver: bridge
+  docker-proxynet:
+    driver: bridge
+
+include:
+  - compose/authentik.yml
+  - compose/404.yml
+  - compose/ghost.yml
+  - compose/traefik.yml

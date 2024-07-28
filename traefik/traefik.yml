@@ -1,0 +1,38 @@
+log:
+  level: INFO
+
+providers:
+  docker:
+    exposedByDefault: false
+    endpoint: tcp://traefik-docker-proxy:2375
+    network: traefik-servicenet
+  file:
+    directory: /etc/traefik/dynamic
+    watch: true
+
+api:
+  dashboard: true
+
+entryPoints:
+  web:
+    address: ':10080'
+    http:
+      redirections:
+        entryPoint:
+          to: ':443'
+          scheme: https
+  websecure:
+    address: ':10443'
+    http3:
+      advertisedPort: 443
+
+certificatesResolvers:
+  cloudflare:
+    acme:
+      email: obliie@obliie.dev
+      storage: /etc/traefik/acme.json
+      dnschallenge:
+        provider: cloudflare
+
+global:
+  sendAnonymousUsage: false
