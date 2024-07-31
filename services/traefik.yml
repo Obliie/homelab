@@ -16,13 +16,11 @@ services:
     mem_limit: 64M
     cap_drop:
       - ALL
-    security_opt:
-      - no-new-privileges
     user: 65534:${DOCKER_GID}
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock:ro
     networks:
-      - docker-proxynet
+      - traefik-docker-proxy
 
   traefik:
     image: traefik:3.1.0
@@ -30,14 +28,13 @@ services:
     read_only: true
     mem_limit: 2G
     cpus: 0.75
+    cap_drop:
+      - ALL
     depends_on:
       - traefik-docker-proxy
-    security_opt:
-      - no-new-privileges:true
     volumes:
       - ./traefik/traefik.yaml:/etc/traefik/traefik.yaml:ro
       - ./traefik/dynamic/:/etc/traefik/dynamic/:ro
-      - ./traefik/authusers.txt:/etc/traefik/authusers.txt:ro
       - ./traefik/acme/acme.json:/etc/traefik/acme.json
     user: "2000:2000"
     secrets:
@@ -55,20 +52,19 @@ services:
     labels:
       - "traefik.enable=true"
       # 1. create router
-      - "traefik.http.routers.traefik.rule=Host(`traefik.lan`)"
+      - "traefik.http.routers.traefik.rule=Host(`traefik.${DOMAIN}`)"
+      - "traefik.http.routers.traefik.priority=10"
       - "traefik.http.routers.traefik.entrypoints=websecure"
       - "traefik.http.routers.traefik.service=api@internal"
       - "traefik.http.routers.traefik.tls=true"
       - "traefik.http.routers.traefik.tls.certresolver=cloudflare"
       - "traefik.http.routers.traefik.tls.domains[0].main=${DOMAIN}"
       - "traefik.http.routers.traefik.tls.domains[0].sans=*.${DOMAIN}"
-      - "traefik.http.routers.traefik.middlewares=traefik-auth, chain-oauth@file, error-pages"
-      # 2. create basic auth middleware
-      - "traefik.http.middlewares.traefik-auth.basicauth.removeheader=true"
-      - "traefik.http.middlewares.traefik-auth.basicauth.usersfile=/etc/traefik/authusers.txt"
+      - "traefik.http.routers.traefik.middlewares=chain-auth@file"
     networks:
       - traefik-servicenet
-      - docker-proxynet
+      - traefik-docker-proxy
     ports:
       - "${PROXY_HOST}:80:10080"
       - "${PROXY_HOST}:443:10443"
+

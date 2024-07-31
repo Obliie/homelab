@@ -1,1 +1,0 @@
-ADD USER USING echo "USER:$(openssl passwd -apr1)" >> authusers.txt

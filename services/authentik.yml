@@ -1,7 +1,7 @@
 version: "3.7"
 
 services:
-  postgresql:
+  authentik-postgresql:
     image: docker.io/library/postgres:16-alpine
     restart: unless-stopped
     healthcheck:
@@ -18,7 +18,10 @@ services:
       POSTGRES_DB: ${PG_DB:-authentik}
     env_file:
       - .env
-  redis:
+    networks:
+      - authentik-servicenet
+
+  authentik-redis:
     image: docker.io/library/redis:alpine
     command: --save 60 1 --loglevel warning
     restart: unless-stopped
@@ -30,13 +33,16 @@ services:
       timeout: 3s
     volumes:
       - authentik_redis:/data
+    networks:
+      - authentik-servicenet
+
   authentik-server:
     image: ${AUTHENTIK_IMAGE:-ghcr.io/goauthentik/server}:${AUTHENTIK_TAG:-2024.6.1}
     restart: unless-stopped
     command: server
     environment:
-      AUTHENTIK_REDIS__HOST: redis
-      AUTHENTIK_POSTGRESQL__HOST: postgresql
+      AUTHENTIK_REDIS__HOST: authentik-redis
+      AUTHENTIK_POSTGRESQL__HOST: authentik-postgresql
       AUTHENTIK_POSTGRESQL__USER: ${PG_USER:-authentik}
       AUTHENTIK_POSTGRESQL__NAME: ${PG_DB:-authentik}
       AUTHENTIK_POSTGRESQL__PASSWORD: ${AUTHENTIK_PG_PASS}
@@ -44,16 +50,28 @@ services:
       - .env
     networks:
       - traefik-servicenet
+      - authentik-servicenet
+    labels:
+      - "traefik.enable=true"
+      # 1. create router
+      - "traefik.http.routers.authentik.rule=Host(`authentik.${DOMAIN}`)"
+      - "traefik.http.routers.authentik.entrypoints=websecure"
+      - "traefik.http.routers.authentik.tls=true"
+      - "traefik.http.routers.authentik.tls.certresolver=cloudflare"
+      - "traefik.http.routers.authentik.middlewares=chain-no-auth@file"
+      - "traefik.http.routers.authentik.service=authentik"
+      - "traefik.http.services.authentik.loadbalancer.server.port=9000"
     depends_on:
-      - postgresql
-      - redis
-  worker:
+      - authentik-postgresql
+      - authentik-redis
+
+  authentik-worker:
     image: ${AUTHENTIK_IMAGE:-ghcr.io/goauthentik/server}:${AUTHENTIK_TAG:-2024.6.1}
     restart: unless-stopped
     command: worker
     environment:
-      AUTHENTIK_REDIS__HOST: redis
-      AUTHENTIK_POSTGRESQL__HOST: postgresql
+      AUTHENTIK_REDIS__HOST: authentik-redis
+      AUTHENTIK_POSTGRESQL__HOST: authentik-postgresql
       AUTHENTIK_POSTGRESQL__USER: ${PG_USER:-authentik}
       AUTHENTIK_POSTGRESQL__NAME: ${PG_DB:-authentik}
       AUTHENTIK_POSTGRESQL__PASSWORD: ${AUTHENTIK_PG_PASS}
@@ -61,19 +79,21 @@ services:
     env_file:
       - .env
     depends_on:
-      - postgresql
-      - redis
+      - authentik-postgresql
+      - authentik-redis
+    networks:
+      - authentik-servicenet
 
 volumes:
   authentik_database:
     driver: local
     driver_opts:
       type: "nfs"
-      o: addr=${NFS_HOST},nolock,soft,rw
-      device: ":/docker01/authentik/database"
+      o: addr=${NFS_HOST},nfsvers=4,rw
+      device: ":/mnt/data-pool/docker01/authentik/database"
   authentik_redis:
     driver: local
     driver_opts:
       type: "nfs"
-      o: addr=${NFS_HOST},nolock,soft,rw
-      device: ":/docker01/authentik/redis"
+      o: addr=${NFS_HOST},nfsvers=4,rw
+      device: ":/mnt/data-pool/docker01/authentik/redis"

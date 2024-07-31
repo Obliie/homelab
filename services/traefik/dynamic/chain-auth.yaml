@@ -1,8 +1,8 @@
 http:
   middlewares:
-    chain-oauth:
+    chain-auth:
       chain:
         middlewares:
           - rate-limit
           - secure-headers
-          - oauth
+          - authentik

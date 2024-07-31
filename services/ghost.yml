@@ -9,11 +9,11 @@ services:
     environment:
       database__client: mysql
       database__connection__host: ghost-db
-      database__connection__port: 3307
+      database__connection__port: 3306
       database__connection__user: ghost
-      database__connection__password: ${GHOST_DB_PASS}
+      database__connection__password: ${GHOST_DB_PASS:?ghost db user password must be set}
       database__connection__database: ghost
-      url: https://${DOMAIN}
+      url: https://${DOMAIN:?domain must be set}
     labels:
       - "traefik.enable=true"
       # 1. create router
@@ -22,33 +22,38 @@ services:
       - "traefik.http.routers.error-pages-router.tls=true"
       - "traefik.http.routers.ghost.tls.certresolver=cloudflare"
       - "traefik.http.routers.ghost.middlewares=chain-no-auth@file"
+      - "traefik.http.routers.ghost.service=ghost"
       - "traefik.http.services.ghost.loadbalancer.server.port=2368"
     depends_on:
       - ghost-db
     networks:
       - traefik-servicenet
+      - ghost-servicenet
+
   ghost-db:
     image: mysql:8.0
     restart: unless-stopped
     environment:
       MYSQL_ROOT_USER: root
-      MYSQL_ROOT_PASSWORD: ${GHOST_DB_ROOT_PASS}
+      MYSQL_ROOT_PASSWORD: ${GHOST_DB_ROOT_PASS:?ghost db root password must be set}
       MYSQL_DATABASE: ghost
       MYSQL_USER: ghost
-      MYSQL_PASSWORD: ${GHOST_DB_PASS}
+      MYSQL_PASSWORD: ${GHOST_DB_PASS:?ghost db user password must be set}
     volumes:
       - ghost_database:/var/lib/mysql
+    networks:
+      - ghost-servicenet
 
 volumes:
   ghost_content:
     driver: local
     driver_opts:
       type: "nfs"
-      o: addr=${NFS_HOST},nolock,soft,rw
-      device: ":/docker01/ghost/content"
+      o: addr=${NFS_HOST:?nfs host must be set},nfsvers=4,rw
+      device: ":/mnt/data-pool/docker01/ghost/content"
   ghost_database:
     driver: local
     driver_opts:
       type: "nfs"
-      o: addr=${NFS_HOST},nolock,soft,rw
-      device: ":/docker01/ghost/database"
+      o: addr=${NFS_HOST:?nfs host must be set},nfsvers=4,rw
+      device: ":/mnt/data-pool/docker01/ghost/database"

@@ -12,12 +12,20 @@ secrets:
 
 networks:
   traefik-servicenet:
+    name: traefik-servicenet
     driver: bridge
-  docker-proxynet:
+  traefik-docker-proxy:
+    name: traefik-docker-proxy
+    driver: bridge
+  authentik-servicenet:
+    name: authentik-servicenet
+    driver: bridge
+  ghost-servicenet:
+    name: ghost-servicenet
     driver: bridge
 
 include:
-  - compose/authentik.yml
-  - compose/404.yml
-  - compose/ghost.yml
-  - compose/traefik.yml
+  - services/authentik.yml
+  - services/error-pages.yml
+  - services/ghost.yml
+  - services/traefik.yml
