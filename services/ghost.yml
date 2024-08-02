@@ -14,12 +14,19 @@ services:
       database__connection__password: ${GHOST_DB_PASS:?ghost db user password must be set}
       database__connection__database: ghost
       url: https://${DOMAIN:?domain must be set}
+      # Configure SMTP server for Ghost
+      mail__from: no-reply@${DOMAIN}
+      mail__transport: SMTP
+      mail__options__host: ${GHOST_SMTP_HOST}
+      mail__options__port: ${GHOST_SMTP_PORT}
+      mail__options__auth__user: '${GHOST_SMTP_USER}'
+      mail__options__auth__pass: '${GHOST_SMTP_PASS}'
     labels:
       - "traefik.enable=true"
       # 1. create router
       - "traefik.http.routers.ghost.rule=Host(`${DOMAIN}`)"
       - "traefik.http.routers.ghost.entrypoints=websecure"
-      - "traefik.http.routers.error-pages-router.tls=true"
+      - "traefik.http.routers.ghost.tls=true"
       - "traefik.http.routers.ghost.tls.certresolver=cloudflare"
       - "traefik.http.routers.ghost.middlewares=chain-no-auth@file"
       - "traefik.http.routers.ghost.service=ghost"
