@@ -64,7 +64,4 @@ services:
     networks:
       - traefik-servicenet
       - traefik-docker-proxy
-    ports:
-      - "${PROXY_HOST}:80:10080"
-      - "${PROXY_HOST}:443:10443"
-
+      - cloudflare-tunnel

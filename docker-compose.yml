@@ -23,6 +23,9 @@ networks:
   ghost-servicenet:
     name: ghost-servicenet
     driver: bridge
+  cloudflare-tunnel:
+    name: cloudflare-tunnel
+    driver: bridge
 
 include:
   - services/authentik.yml
@@ -30,3 +33,4 @@ include:
   - services/ghost.yml
   - services/traefik.yml
   - services/gitlab.yml
+  - services/cloudflared.yml
