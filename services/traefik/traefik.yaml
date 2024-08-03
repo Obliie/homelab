@@ -34,5 +34,10 @@ certificatesResolvers:
       dnschallenge:
         provider: cloudflare
 
+serversTransport:
+  insecureSkipVerify: false
+  rootCAs:
+    - /etc/traefik/certs/local-root-ca.crt
+
 global:
   sendAnonymousUsage: false

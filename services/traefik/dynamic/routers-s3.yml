@@ -1,0 +1,18 @@
+http:
+  routers:
+    minio:
+      rule: Host(`s3.{{env "DOMAIN"}}`)
+      entryPoints:
+        - "websecure"
+      tls:
+        certResolver: cloudflare
+      middlewares:
+        - chain-no-auth@file
+      service: minio
+
+  services:
+    minio:
+      loadBalancer:
+        passHostHeader: true
+        servers:
+          - url: https://s3.lan:9002

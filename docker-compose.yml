@@ -9,6 +9,8 @@ secrets:
     file: ./secrets/traefik.crt
   TRAEFIK_SSL_KEY:
     file: ./secrets/traefik.key
+  LOCAL_ROOT_CA_CERT:
+    file: ./secrets/local-root-ca.crt
 
 networks:
   traefik-servicenet:

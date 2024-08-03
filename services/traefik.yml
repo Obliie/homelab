@@ -46,9 +46,12 @@ services:
         target: /etc/traefik/certs/traefik.crt
       - source: TRAEFIK_SSL_KEY
         target: /etc/traefik/certs/traefik.key
+      - source: LOCAL_ROOT_CA_CERT
+        target: /etc/traefik/certs/local-root-ca.crt
     environment:
       - CF_API_EMAIL_FILE=/run/secrets/CF_API_EMAIL
       - CF_API_KEY_FILE=/run/secrets/CF_API_KEY
+      - DOMAIN=${DOMAIN}
     labels:
       - "traefik.enable=true"
       # 1. create router
