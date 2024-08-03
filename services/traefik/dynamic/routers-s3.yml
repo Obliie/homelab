@@ -15,4 +15,4 @@ http:
       loadBalancer:
         passHostHeader: true
         servers:
-          - url: https://s3.lan:9002
+          - url: https://s3.lan:9000
