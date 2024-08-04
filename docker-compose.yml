@@ -28,6 +28,9 @@ networks:
   cloudflare-tunnel:
     name: cloudflare-tunnel
     driver: bridge
+  gitlab-servicenet:
+    name: gitlab-servicenet
+    driver: bridge
 
 include:
   - services/authentik.yml

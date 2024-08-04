@@ -1,9 +1,8 @@
 version: "3.7"
 
 services:
-  gitlab:
+  gitlab-web:
     image: gitlab/gitlab-ee:latest
-    container_name: gitlab
     restart: unless-stopped
     environment:
       GITLAB_OMNIBUS_CONFIG: |
@@ -39,6 +38,18 @@ services:
       - "traefik.http.services.gitlab-registry.loadbalancer.server.port=5005"
     networks:
       - traefik-servicenet
+      - gitlab-servicenet
+
+  gitlab-runner:
+    image: gitlab/gitlab-runner:alpine
+    restart: unless-stopped
+    depends_on:
+      - gitlab-web
+    volumes:
+      - gitlab_runner:/etc/gitlab-runner
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+    networks:
+      - gitlab-servicenet
 
 volumes:
   gitlab_data:
@@ -59,3 +70,9 @@ volumes:
       type: "nfs"
       o: addr=${NFS_HOST:?nfs host must be set},nfsvers=4,rw
       device: ":/mnt/data-pool/docker01/gitlab/config"
+  gitlab_runner:
+    driver: local
+    driver_opts:
+      type: "nfs"
+      o: addr=${NFS_HOST:?nfs host must be set},nfsvers=4,rw
+      device: ":/mnt/data-pool/docker01/gitlab/docker-runner-01"
