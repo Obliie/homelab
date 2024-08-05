@@ -25,6 +25,8 @@ entryPoints:
     address: ':10443'
     http3:
       advertisedPort: 443
+  ssh:
+    address: ':10022'
 
 certificatesResolvers:
   cloudflare:

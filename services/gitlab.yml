@@ -13,6 +13,7 @@ services:
         registry_nginx['listen_https'] = false
         registry_nginx['listen_port'] = '5005'
         registry_external_url 'https://registry.${DOMAIN}'
+        gitlab_rails['gitlab_ssh_host'] = 'git.${DOMAIN}'
     volumes:
       - gitlab_config:/etc/gitlab
       - gitlab_logs:/var/log/gitlab
@@ -36,6 +37,11 @@ services:
       - "traefik.http.routers.gitlab-registry.middlewares=chain-no-auth@file"
       - "traefik.http.routers.gitlab-registry.service=gitlab-registry"
       - "traefik.http.services.gitlab-registry.loadbalancer.server.port=5005"
+      # 3. create ssh router
+      - "traefik.tcp.routers.gitlab-ssh.rule=HostSNI(`*`)"
+      - "traefik.tcp.routers.gitlab-ssh.entrypoints=ssh"
+      - "traefik.tcp.routers.gitlab-ssh.service=gitlab-ssh"
+      - "traefik.tcp.services.gitlab-ssh.loadbalancer.server.port=22"
     networks:
       - traefik-servicenet
       - gitlab-servicenet
