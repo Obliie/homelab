@@ -1,0 +1,17 @@
+services:
+ gitlab.com-runner:
+    image: gitlab/gitlab-runner:alpine
+    restart: unless-stopped
+    volumes:
+      - gitlab_runner:/etc/gitlab-runner
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+    networks:
+      - gitlab-servicenet
+
+volumes:
+  gitlab_runner:
+    driver: local
+    driver_opts:
+      type: "nfs"
+      o: addr=${NFS_HOST:?nfs host must be set},nfsvers=4,rw
+      device: ":/mnt/data-pool/docker01/gitlab/docker-runner-gitlab.com"

@@ -15,7 +15,7 @@ services:
       database__connection__database: ghost
       url: https://${DOMAIN:?domain must be set}
       # Configure SMTP server for Ghost
-      mail__from: no-reply@${DOMAIN}
+      mail__from: obliie@${DOMAIN}
       mail__transport: SMTP
       mail__options__host: ${GHOST_SMTP_HOST}
       mail__options__port: ${GHOST_SMTP_PORT}

@@ -37,6 +37,7 @@ include:
   - services/error-pages.yml
   - services/ghost.yml
   - services/traefik.yml
-  - services/gitlab.yml
+#  - services/gitlab.yml
+  - services/gitlab-runner.yml
   - services/cloudflared.yml
   - services/twingate.yml
